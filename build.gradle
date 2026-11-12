@@ -33,8 +33,8 @@ def testRunFinished = tasks.register('testRunFinished') {
     }
 }
 
-// Первая задача: стандартная задача Gradle запускает все JUnit-тесты проекта.
-tasks.named('test', Test) {
+// Общие настройки для обычного прогона и демонстрации падающего ассерта.
+tasks.withType(Test).configureEach {
     useJUnitPlatform()
     systemProperty 'file.encoding', 'UTF-8'
     testLogging {
@@ -45,4 +45,28 @@ tasks.named('test', Test) {
     // Случайные входные данные генерируются заново при каждом запуске.
     outputs.upToDateWhen { false }
     finalizedBy testRunFinished
+}
+
+// .\gradlew.bat test                  — все обычные тесты
+// .\gradlew.bat test -Ptag=webinar    — только тесты вебинара
+// .\gradlew.bat test -Ptag=lecture    — только тесты лекций
+tasks.named('test', Test) {
+    useJUnitPlatform {
+        excludeTags 'expected-failure'
+        if (project.hasProperty('tag')) {
+            includeTags project.property('tag').toString()
+        }
+    }
+}
+
+// .\gradlew.bat failingAssertions — намеренно падающий тест, 10 повторов.
+// Задача должна завершиться ошибкой и показать expected / actual в отчёте.
+tasks.register('failingAssertions', Test) {
+    group = 'verification'
+    description = 'Demonstrates an informative failing assertion (10 intentional failures).'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform {
+        includeTags 'expected-failure'
+    }
 }
