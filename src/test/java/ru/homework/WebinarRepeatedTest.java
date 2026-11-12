@@ -2,6 +2,7 @@ package ru.homework;
 
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.RepetitionInfo;
+import org.junit.jupiter.api.Tag;
 import ru.homework.support.TestLifecycle;
 
 import java.util.Arrays;
@@ -10,9 +11,10 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static ru.homework.support.TestData.*;
-import static ru.homework.support.TestResult.check;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /** Задача 2: четыре метода с @RepeatedTest, каждый выполняется 20 раз. */
+@Tag("webinar")
 class WebinarRepeatedTest extends TestLifecycle {
     @RepeatedTest(20)
     void checkAccess(RepetitionInfo repetition) {
@@ -20,11 +22,11 @@ class WebinarRepeatedTest extends TestLifecycle {
         int index = repetition.getCurrentRepetition() - 1;
         if (index < boundaries.size()) {
             String[] row = boundaries.get(index);
-            check("checkAccess", row[0], row[1], BasicJava.checkAccess(Integer.parseInt(row[0])));
+            assertEquals(row[1], BasicJava.checkAccess(Integer.parseInt(row[0])),
+                    "checkAccess(" + row[0] + ") из CSV: доступ разрешён строго после 18 лет");
         } else {
             int age = randomInt(0, 99);
-            check("checkAccess", String.valueOf(age), age >= 19 ? "Allowed" : "Denied",
-                    BasicJava.checkAccess(age));
+            assertEquals(age >= 19 ? "Allowed" : "Denied", BasicJava.checkAccess(age), "checkAccess(" + age + ")");
         }
     }
 
@@ -34,7 +36,7 @@ class WebinarRepeatedTest extends TestLifecycle {
         String countdown = IntStream.range(0, Math.max(0, start))
                 .map(i -> start - i).mapToObj(Integer::toString).collect(Collectors.joining(" "));
         String expected = countdown.isEmpty() ? "Поехали!" : countdown + " Поехали!";
-        check("blastOff", String.valueOf(start), expected, BasicJava.blastOff(start));
+        assertEquals(expected, BasicJava.blastOff(start), "blastOff(" + start + ")");
     }
 
     @RepeatedTest(20)
@@ -42,7 +44,8 @@ class WebinarRepeatedTest extends TestLifecycle {
         int[] input = randomNumbers(randomInt(1, 20), -1000, 1000);
         int[] sorted = input.clone();
         Arrays.sort(sorted);
-        check("findMax", Arrays.toString(input), sorted[sorted.length - 1], BasicJava.findMax(input));
+        assertEquals(sorted[sorted.length - 1], BasicJava.findMax(input),
+                "findMax(" + Arrays.toString(input) + ")");
     }
 
     @RepeatedTest(20)
@@ -50,6 +53,6 @@ class WebinarRepeatedTest extends TestLifecycle {
         List<Integer> input = Arrays.stream(randomNumbers(randomInt(0, 20), -1000, 1000))
                 .boxed().collect(Collectors.toList());
         double expected = input.stream().mapToInt(Integer::intValue).average().orElse(0.0);
-        check("calcAverage", input.toString(), expected, BasicJava.calcAverage(input));
+        assertEquals(expected, BasicJava.calcAverage(input), 1e-9, "calcAverage(" + input + ")");
     }
 }

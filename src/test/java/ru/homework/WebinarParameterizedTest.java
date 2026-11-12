@@ -1,5 +1,6 @@
 package ru.homework;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvFileSource;
@@ -16,29 +17,31 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static ru.homework.support.TestData.*;
-import static ru.homework.support.TestResult.check;
+import static org.junit.jupiter.api.Assertions.*;
 
 /** Задача 2: четыре метода с @ParameterizedTest. */
+@Tag("webinar")
 class WebinarParameterizedTest extends TestLifecycle {
     @ParameterizedTest(name = "getGrade: {0} -> {1}")
     @CsvFileSource(resources = "/grades.csv", numLinesToSkip = 1, encoding = "UTF-8")
     @MethodSource("randomGrades")
     void getGrade(int score, String expected) {
-        check("getGrade", String.valueOf(score), expected, BasicJava.getGrade(score));
+        assertEquals(expected, BasicJava.getGrade(score), "getGrade(" + score + ")");
     }
 
     @ParameterizedTest(name = "sumToN: {0} -> {1}")
     @CsvFileSource(resources = "/sums.csv", numLinesToSkip = 1, encoding = "UTF-8")
     @MethodSource("randomSums")
     void sumToN(int n, int expected) {
-        check("sumToN", String.valueOf(n), expected, BasicJava.sumToN(n));
+        assertEquals(expected, BasicJava.sumToN(n), "sumToN(" + n + ")");
     }
 
     @ParameterizedTest(name = "getEvenInRange: [{0}, {1}] -> {2}")
     @CsvFileSource(resources = "/ranges.csv", numLinesToSkip = 1, encoding = "UTF-8")
     @MethodSource("randomRanges")
     void getEvenInRange(int start, int end, String expected) {
-        check("getEvenInRange", start + ", " + end, expected, BasicJava.getEvenInRange(start, end));
+        assertEquals(expected, BasicJava.getEvenInRange(start, end),
+                "getEvenInRange(" + start + ", " + end + ")");
     }
 
     @ParameterizedTest(name = "removeSpecificName: {0}, remove={1}")
@@ -46,9 +49,10 @@ class WebinarParameterizedTest extends TestLifecycle {
     void removeSpecificName(List<String> input, String nameToRemove, List<String> expected) {
         List<String> snapshot = input == null ? null : new ArrayList<>(input);
         List<String> actual = BasicJava.removeSpecificName(input, nameToRemove);
-        check("removeSpecificName", input + ", " + nameToRemove, expected, actual);
-        check("removeSpecificName preserves input", String.valueOf(snapshot), snapshot, input);
-        check("removeSpecificName returns new list", String.valueOf(input), true, actual != input);
+        assertAll("removeSpecificName(" + snapshot + ", " + nameToRemove + ")",
+                () -> assertEquals(expected, actual, "Список после удаления всех совпадений"),
+                () -> assertEquals(snapshot, input, "Исходный список должен сохраниться"),
+                () -> assertNotSame(input, actual, "Ожидался новый список; получена исходная ссылка"));
     }
 
     static Stream<Arguments> randomGrades() {
